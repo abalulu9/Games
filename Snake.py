@@ -85,13 +85,15 @@ class Snake(Tk, Controls):
 		self.cellwidth = int(self.width / self.columns)
 		self.cellheight = int(self.height / self.rows)
 		self.bind('<KeyPress>', self.setDirection)
+		self.highScore = 0
 
 		self.start()
 
 	def drawScore(self):
 
 		self.canvas.delete('score')
-		self.canvas.create_text(self.cellwidth + 6, self.height + self.cellheight/2 - 2, text = f"Score: {self.score}", tags = 'score', font = "Times 12")
+		self.canvas.create_text(self.cellwidth, self.height + self.cellheight/2 - 2, anchor = 'w', text = f"Score: {self.score} \t Highscore: {self.highScore}", tags = 'score', font = "Times 12")
+
 
 	def refresh(self):
 
@@ -123,6 +125,7 @@ class Snake(Tk, Controls):
 			self.spawnFood()
 			self.increaseLength = True
 			self.score += 1
+			self.highScore = max(self.score, self.highScore)
 			self.drawScore()
 
 	def assessCollision(self):
