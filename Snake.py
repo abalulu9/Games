@@ -1,5 +1,6 @@
 from tkinter import *
-from random import randint 
+from random import randint
+from numpy import * 
 
 class Controls():
 
@@ -7,14 +8,14 @@ class Controls():
 
 		self.direction = key.keysym
 
-	def move(self):
+	def move(self, direction = None):
 
-		self.canvas.delete('snake')
+		if direction is not None:
+			self.direction = direction
 
-		if self.increaseLength == False:
-			self.snake.pop()
-		else:
-			self.increaseLength = False
+		if not self.AI:
+
+			self.canvas.delete('snake')
 
 		if self.direction == "Left":
 			self.moveLeft()
@@ -25,7 +26,7 @@ class Controls():
 		elif self.direction == "Down":
 			self.moveDown()
 
-		if self.alive:
+		if self.alive and not self.AI:
 			self.drawSnake()
 
 	def moveLeft(self):
@@ -70,24 +71,28 @@ class Controls():
 
 class Snake(Tk, Controls):
 
-	def __init__(self):
+	def __init__(self, AI = False):
 
-		Tk.__init__(self)
-
-		self.winfo_toplevel().title("Snake")
-
-		self.width = 500
-		self.height = 500
-		self.canvas = Canvas(self, width = self.width, height = self.height + 20)
-		self.canvas.pack(side = 'top', fill = 'both')
+		self.AI = AI
 		self.rows = 20
 		self.columns = 20
+		self.width = 500
+		self.height = 500
 		self.cellwidth = int(self.width / self.columns)
 		self.cellheight = int(self.height / self.rows)
-		self.bind('<KeyPress>', self.setDirection)
-		self.highScore = 0
 
-		self.start()
+		if not AI:
+
+			Tk.__init__(self)
+
+			self.winfo_toplevel().title("Snake")
+
+			self.canvas = Canvas(self, width = self.width, height = self.height + 20)
+			self.canvas.pack(side = 'top', fill = 'both')
+			self.bind('<KeyPress>', self.setDirection)
+			self.highScore = 0
+
+
 
 	def drawScore(self):
 
@@ -99,11 +104,15 @@ class Snake(Tk, Controls):
 
 		if self.alive:
 
-			self.move()
-			self.assessFood()
-			self.assessCollision()
+			self.iterate()
 
 			self.after(int(self.timePerFrame), self.refresh)
+
+	def iterate(self, direction = None):
+
+		self.move(direction)
+		self.assessFood()
+		self.assessCollision()
 
 	def spawnFood(self):
 
@@ -111,6 +120,8 @@ class Snake(Tk, Controls):
 
 		while self.food in self.snake:
 			self.food = self.randomLocation()
+
+	def drawFood(self):
 
 		self.canvas.create_rectangle(self.food[0] + 2, self.food[1] + 2, self.food[0] + self.cellwidth - 2, self.food[1] + self.cellheight - 2, tags = 'food', fill = 'red')
 
@@ -121,12 +132,22 @@ class Snake(Tk, Controls):
 	def assessFood(self):
 
 		if self.snake[0] == self.food:
-			self.canvas.delete('food')
-			self.spawnFood()
+
 			self.increaseLength = True
 			self.score += 1
-			self.highScore = max(self.score, self.highScore)
-			self.drawScore()
+			self.spawnFood()
+
+			if not self.AI:
+
+				self.canvas.delete('food')
+				self.drawFood()
+				self.highScore = max(self.score, self.highScore)
+				self.drawScore()
+
+		if self.increaseLength == False:
+			self.snake.pop()
+		else:
+			self.increaseLength = False
 
 	def assessCollision(self):
 
@@ -136,7 +157,6 @@ class Snake(Tk, Controls):
 	def createSnake(self):
 
 		self.snake = [(150 + self.cellwidth * i, self.cellheight * self.columns / 2) for i in range(5, 0, -1)]
-		self.drawSnake()
 		self.increaseLength = False
 
 	def drawSnake(self):
@@ -149,25 +169,78 @@ class Snake(Tk, Controls):
 
 	def gameOver(self):
 
-		self.canvas.delete('all')
-		self.canvas.create_text(250, 250, font = "Times 30", text = f"Game Over -- Score: {self.score}")
 		self.alive = False
-		button = Button(text = "Play Again?", font = "Times 20", command = self.start)
-		button.configure(width = 10)
-		self.canvas.create_window(250, 350, window = button)		
+
+		if not self.AI:
+
+			self.canvas.delete('all')
+			self.canvas.create_text(250, 250, font = "Times 30", text = f"Game Over -- Score: {self.score}")
+			button = Button(text = "Play Again?", font = "Times 20", command = self.start)
+			button.configure(width = 10)
+			self.canvas.create_window(250, 350, window = button)		
+
+		else:
+
+			return self.score 
 
 	def start(self):
 
-		self.canvas.delete('all')
 		self.direction = 'Right'
 		self.travelling = 'Right'
 		self.score = 0
 		self.alive = True
 		self.createSnake()
-		self.canvas.create_rectangle(2, 500, 501, 521)
-		self.drawScore()
 		self.spawnFood()
-		self.refresh()
+
+
+		if not self.AI:
+
+			self.canvas.delete('all')
+			self.drawSnake()
+			self.canvas.create_rectangle(2, 500, 501, 521)
+			self.drawScore()
+			self.drawFood()
+			self.refresh()
+
+		else:
+
+			self.outputState()
+
+
+
+	def outputState(self):
+		return self.snakeState + self.foodState + [self.directionState]
+
+	@property 
+	def snakeState(self):
+		return [int(i/25) for snakeBit in self.snake for i in snakeBit]
+
+	@property
+	def foodState(self):
+		return [int(food/25) for food in self.food]
+	
+	@property 
+	def directionState(self):
+
+		directionState = 0
+
+		for direction in ['L', 'R', 'U', 'D']:
+			if self.direction[0] == direction:
+				break
+			directionState += 1
+
+		return directionState
+
+	def outputGrid(self):
+
+		grid = [[[0, 0, 0] for i in range(self.columns)] for i in range(self.rows)]
+
+		for snakeBit in self.snake:
+			grid[int(snakeBit[0]/25)][int(snakeBit[1]/25)][0] = 1
+
+		grid[int(self.food[0]/25)][int(self.food[1]/25)][1] = 1
+
+		return grid
 
 	@property
 	def timePerFrame(self):
@@ -175,5 +248,14 @@ class Snake(Tk, Controls):
 	
 if __name__ == '__main__':
 	
-	snake = Snake()
-	snake.mainloop()
+	snake = Snake(0)
+	snake.start()
+	print(snake.outputState())
+	for i in range(5):
+		snake.iterate('Down')
+		print(snake.outputState())
+	for i in range(5):
+		snake.iterate('Left')
+		print(snake.outputState())
+
+	# snake.mainloop()
