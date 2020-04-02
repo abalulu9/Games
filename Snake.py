@@ -209,7 +209,7 @@ class Snake(Tk, Controls):
 
 
 	def outputState(self):
-		return self.snakeState + self.foodState + [self.directionState]
+		return self.foodState + [self.directionState] _self.snakeState
 
 	@property 
 	def snakeState(self):
@@ -250,12 +250,12 @@ if __name__ == '__main__':
 	
 	snake = Snake(0)
 	snake.start()
-	print(snake.outputState())
-	for i in range(5):
-		snake.iterate('Down')
-		print(snake.outputState())
-	for i in range(5):
-		snake.iterate('Left')
-		print(snake.outputState())
+	# print(snake.outputState())
+	# for i in range(5):
+	# 	snake.iterate('Down')
+	# 	print(snake.outputState())
+	# for i in range(5):
+	# 	snake.iterate('Left')
+	# 	print(snake.outputState())
 
-	# snake.mainloop()
+	snake.mainloop()
