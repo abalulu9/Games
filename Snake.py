@@ -87,7 +87,10 @@ class Snake(Tk, Controls):
 		self.bind('<KeyPress>', self.setDirection)
 		self.highScore = 0
 
+	def play(self):
+
 		self.start()
+		self.mainloop()
 
 	def drawScore(self):
 
@@ -176,4 +179,4 @@ class Snake(Tk, Controls):
 if __name__ == '__main__':
 	
 	snake = Snake()
-	snake.mainloop()
+	snake.play()
