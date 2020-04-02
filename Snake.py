@@ -209,7 +209,7 @@ class Snake(Tk, Controls):
 
 
 	def outputState(self):
-		return self.foodState + [self.directionState] _self.snakeState
+		return self.foodState + [self.directionState] + self.snakeState
 
 	@property 
 	def snakeState(self):
@@ -231,6 +231,7 @@ class Snake(Tk, Controls):
 
 		return directionState
 
+	@property 
 	def outputGrid(self):
 
 		grid = [[[0, 0, 0] for i in range(self.columns)] for i in range(self.rows)]
@@ -257,5 +258,6 @@ if __name__ == '__main__':
 	# for i in range(5):
 	# 	snake.iterate('Left')
 	# 	print(snake.outputState())
+	# print(snake.outputGrid())
 
 	snake.mainloop()
